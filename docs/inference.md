@@ -2,18 +2,15 @@
 
 ## 环境准备
 
-### 1. 安装 Python 3.7
-
-TensorFlow 1.15 仅支持 Python 3.7 及以下版本。
+### 1. 安装 Python 3.9+
 
 ```bash
-# 使用 conda（推荐）
-conda create -n captcha python=3.7
-conda activate captcha
+# macOS (Homebrew)
+brew install python@3.11
 
-# 或使用 pyenv
-pyenv install 3.7.9
-pyenv local 3.7.9
+# 或使用 conda
+conda create -n captcha python=3.11
+conda activate captcha
 ```
 
 ### 2. 安装依赖
@@ -24,20 +21,17 @@ pip install -r requirements.txt
 
 ### 3. 准备模型文件
 
-从 GitHub Release 下载 `model.zip`，解压到项目根目录：
+从 GitHub Release 下载 `model-YYYYMMDD.zip`，解压到项目根目录：
 
 ```bash
-unzip model.zip
+unzip model-YYYYMMDD.zip -d saved_model/
 ```
 
 解压后 `saved_model/` 目录应包含：
 
 ```
 saved_model/
-├── checkpoint
-├── test_model.mdl.data-00000-of-00001
-├── test_model.mdl.index
-└── test_model.mdl.meta
+└── model.h5
 ```
 
 ## 命令行识别
@@ -65,7 +59,7 @@ from core.preprocessor.splitter import spt
 from core.model.identification import Identificator
 
 # 加载模型（只需加载一次）
-idf = Identificator('saved_model/test_model.mdl')
+idf = Identificator('saved_model/model.h5')
 
 # 读取验证码图片并分割
 img = captchaImg('edgc', cv.imread('data/samples/edgc.png'))

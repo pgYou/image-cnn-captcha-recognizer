@@ -1,6 +1,6 @@
-tensorflow==1.15.0
+tensorflow>=2.13
 opencv-python
-Pillow
+Pillow>=10.0.0
 numpy
 captcha
 matplotlib

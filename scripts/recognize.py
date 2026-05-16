@@ -6,7 +6,7 @@ from core.image import captchaImg
 from core.preprocessor.splitter import spt
 from core.model.identification import Identificator
 
-model_path = "saved_model/test_model.mdl"
+model_path = "saved_model/model.weights.h5"
 
 # 从命令行参数获取图片路径，默认使用样例
 if len(sys.argv) > 1:
