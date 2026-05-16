@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+output/
+
+# 数据（从 GitHub Release 下载）
+data/train/
+data/val/
+
+# 模型权重（从 GitHub Release 下载）
+saved_model/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# 临时文件
+data/temp/
