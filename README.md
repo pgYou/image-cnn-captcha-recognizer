@@ -13,7 +13,8 @@
 │   │   ├── splitter.py          # 字符分割、滴水法处理粘连
 │   │   └── tool.py              # PIL/OpenCV 格式转换工具
 │   └── model/                   # CNN 模型
-│       ├── trainModel.py        # 模型定义与训练（Trainer）
+│       ├── network.py           # 模型结构定义
+│       ├── trainModel.py        # 训练（Trainer）
 │       └── identification.py    # 推理识别（Identificator）
 ├── scripts/                     # 可执行脚本
 │   ├── train.py                 # 训练入口
@@ -50,11 +51,9 @@ Input (40, 25, 1)
 
 ## 环境要求
 
-- **Python 3.7**
-- **TensorFlow 1.15**
+- **Python 3.9+**
+- **TensorFlow 2.13+**（原生支持 macOS Apple Silicon）
 - OpenCV、Pillow、NumPy、captcha、Matplotlib
-
-> 注意：TensorFlow 1.15 不支持 Python 3.8+ 和 Apple Silicon，请在 x86_64 环境或 Docker 中运行。
 
 ## 快速开始
 

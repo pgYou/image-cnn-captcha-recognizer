@@ -2,18 +2,15 @@
 
 ## 环境准备
 
-### 1. 安装 Python 3.7
-
-TensorFlow 1.15 仅支持 Python 3.7 及以下版本。
+### 1. 安装 Python 3.9+
 
 ```bash
-# 使用 conda（推荐）
-conda create -n captcha python=3.7
-conda activate captcha
+# macOS (Homebrew)
+brew install python@3.11
 
-# 或使用 pyenv
-pyenv install 3.7.9
-pyenv local 3.7.9
+# 或使用 conda
+conda create -n captcha python=3.11
+conda activate captcha
 ```
 
 ### 2. 安装依赖
@@ -25,9 +22,9 @@ pip install -r requirements.txt
 依赖列表（详见 `requirements.txt`）：
 
 ```
-tensorflow==1.15.0
+tensorflow>=2.13
 opencv-python
-Pillow
+Pillow>=10.0.0
 numpy
 captcha
 matplotlib
@@ -37,21 +34,21 @@ matplotlib
 
 ### 方式一：使用已有数据
 
-如果你已经下载了训练数据（从 GitHub Release 的 `train_data.zip` 和 `val_data.zip`），解压到项目根目录：
+如果你已经下载了训练数据（从 GitHub Release 的 `data-YYYYMMDD.zip`），解压到项目根目录：
 
 ```bash
-unzip train_data.zip -d data/train/
-unzip val_data.zip -d data/val/
+unzip data-YYYYMMDD.zip -d data/train/
+# 验证集也在同一个 zip 中，需单独解压或使用 prepare 命令重新生成
 ```
 
 解压后目录结构：
 
 ```
-data/train/          # 训练集，约 35000 张单字符图片
-data/val/            # 验证集，约 300 张单字符图片
+data/train/          # 训练集
+data/val/            # 验证集
 ```
 
-每张图片命名格式为 `{验证码}_{序号}_{字符}.png`，例如 `abcd_0_a.png` 表示验证码 `abcd` 的第 0 个字符 `a`，是一张 25×40 的单字符灰度图。
+每张图片命名格式为 `{验证码}_{序号}_{字符}.png`，例如 `abcd_0_a.png`，是一张 25×40 的单字符灰度图。
 
 ### 方式二：从头生成数据
 
@@ -92,7 +89,7 @@ python scripts/train.py
 ```python
 train_image_dir = "data/train/"      # 训练集目录
 verify_image_dir = "data/val/"       # 验证集目录
-model_save_dir = "saved_model/test_model.mdl"  # 模型保存路径
+model_save_dir = "saved_model/model.h5"  # 模型保存路径
 ```
 
 ### 训练过程
@@ -108,10 +105,7 @@ model_save_dir = "saved_model/test_model.mdl"  # 模型保存路径
 
 ```
 saved_model/
-├── checkpoint
-├── test_model.mdl.data-00000-of-00001
-├── test_model.mdl.index
-└── test_model.mdl.meta
+└── model.h5
 ```
 
 ## 验证模型效果
