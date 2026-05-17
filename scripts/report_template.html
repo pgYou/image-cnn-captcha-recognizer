@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAPTCHA OCR Test Report</title>
+<style>
+  :root {
+    --bg: #FAF7F2;
+    --card: #FFFFFF;
+    --text: #3D3929;
+    --text-muted: #8C8680;
+    --accent: #D97757;
+    --accent-light: #FDF0EC;
+    --border: #E8E2DA;
+    --success: #6B9E78;
+    --error: #C75C5C;
+    --error-bg: #FDF2F2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 40px 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  h1 {
+    font-family: Georgia, 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 32px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  /* Summary */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    text-align: center;
+    padding: 20px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.success { color: var(--success); }
+  .stat-value.error { color: var(--error); }
+  .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Environment */
+  .env-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+    font-size: 14px;
+  }
+  .env-key { color: var(--text-muted); }
+  .env-val { font-weight: 500; }
+
+  /* Errors */
+  .section-title {
+    font-family: Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 36px 0 16px;
+  }
+  .error-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .error-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--error);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .error-card img {
+    width: 100%;
+    height: 80px;
+    object-fit: contain;
+    background: #f5f3ef;
+    border-bottom: 1px solid var(--border);
+    padding: 8px;
+  }
+  .error-info { padding: 12px 16px; }
+  .error-prediction {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .error-prediction .label { color: var(--text-muted); }
+  .error-prediction .arrow { color: var(--text-muted); margin: 0 6px; }
+  .error-prediction .wrong { color: var(--error); font-weight: 600; }
+  .error-prediction .correct { color: var(--success); }
+  .char-diff { font-size: 12px; color: var(--text-muted); }
+  .char-diff .diff { color: var(--error); font-weight: 600; background: var(--error-bg); padding: 1px 3px; border-radius: 3px; }
+  .no-errors { text-align: center; padding: 40px; color: var(--success); font-size: 18px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>CAPTCHA OCR Test Report</h1>
+  <p class="subtitle" id="timestamp"></p>
+
+  <div class="summary-grid" id="summary"></div>
+
+  <div class="card">
+    <div class="env-grid" id="env"></div>
+  </div>
+
+  <h2 class="section-title" id="error-title"></h2>
+  <div class="error-grid" id="errors"></div>
+</div>
+
+<script>
+const data = __REPORT_DATA__;
+
+// Timestamp
+document.getElementById('timestamp').textContent = 'Generated: ' + data.timestamp;
+
+// Summary stats
+const summaryEl = document.getElementById('summary');
+const accColor = data.accuracy >= 95 ? 'success' : data.accuracy >= 70 ? 'accent' : 'error';
+summaryEl.innerHTML = `
+  <div class="stat"><div class="stat-value ${accColor}">${data.accuracy}%</div><div class="stat-label">Accuracy</div></div>
+  <div class="stat"><div class="stat-value">${data.correct} / ${data.total}</div><div class="stat-label">Correct / Total</div></div>
+  <div class="stat"><div class="stat-value accent">${data.avg_time_ms} ms</div><div class="stat-label">Avg. Inference Time</div></div>
+  <div class="stat"><div class="stat-value">${data.errors.length}</div><div class="stat-label">Errors</div></div>
+`;
+
+// Environment
+const envEl = document.getElementById('env');
+const env = data.environment;
+envEl.innerHTML = [
+  ['Python', env.python], ['TensorFlow', env.tensorflow],
+  ['Device', env.device], ['Model', env.model_path],
+].map(([k, v]) => `<span class="env-key">${k}</span><span class="env-val">${v}</span>`).join('');
+
+// Errors
+const errorTitleEl = document.getElementById('error-title');
+errorTitleEl.textContent = `Wrong Predictions (${data.errors.length})`;
+
+const errorsEl = document.getElementById('errors');
+if (data.errors.length === 0) {
+  errorsEl.innerHTML = '<div class="no-errors">All predictions correct!</div>';
+} else {
+  errorsEl.innerHTML = data.errors.map(e => {
+    let diffHtml = '';
+    const maxLen = Math.max(e.label.length, e.pred.length);
+    for (let i = 0; i < maxLen; i++) {
+      const lc = e.label[i] || '_';
+      const pc = e.pred[i] || '_';
+      if (lc !== pc) diffHtml += `<span class="diff">${pc}</span>`;
+      else diffHtml += pc;
+    }
+    return `
+      <div class="error-card">
+        <img src="data:image/png;base64,${e.image_b64}" alt="${e.label}">
+        <div class="error-info">
+          <div class="error-prediction">
+            <span class="correct">${e.label}</span>
+            <span class="arrow">&rarr;</span>
+            <span class="wrong">${e.pred}</span>
+          </div>
+          <div class="char-diff">${diffHtml}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

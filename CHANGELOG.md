@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.0.0] - 2026-05-17
+
+### Added
+- CRNN + CTC 端到端模型（`core/model/network.py`），替代 v1 分割+CNN 方案
+- `core/model/train.py` CRNN 训练逻辑（tf.data 管线、数据增强、CTC Loss）
+- `core/model/inference.py` 端到端推理识别（Recognizer）
+- `core/model/constants.py` 共享常量（字符集、CTC 编码、图片尺寸）
+- `app/` 包：导出 `recognize()` 函数，支持 SDK 调用和 CLI
+- `scripts/test.py` 测试脚本，生成 Anthropic 风格 HTML 报告（含环境信息、推理耗时、错误图片 base64 内嵌）
+- `scripts/report_template.html` 测试报告 HTML 模板
+- 支持 3-7 位变长验证码识别
+- 训练数据增加变长、扭曲、多种噪声类型
+
+### Changed
+- 架构从「分割→单字符CNN」升级为「CRNN+CTC 端到端」，无需字符分割
+- 模型：3 层 CNN → 4 层 CNN + 2 层 BiLSTM + CTC
+- 输入：单字符 25×40 → 整图 60×160
+- 推理调用方式：`from app import recognize`
+- `scripts/train.py` 改为 CRNN 训练入口，支持 `--gpu` 参数
+- `core/app/` 移至项目根目录 `app/`
+- 修复 `NUM_TO_CHAR` 编码偏移 bug（StringLookup 与推理映射不一致）
+
+### Deprecated
+- `core/model/trainModel.py` — v1 CNN 训练，保留但不再维护
+- `core/model/identification.py` — v1 单字符推理，保留但不再维护
+- `core/preprocessor/` — v1 预处理（降噪、分割），CRNN 不再需要
+
 ## [1.1.0] - 2026-05-16
 
 ### Added

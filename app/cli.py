@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from core.app import recognize
+from app import recognize
 
 
 def main():

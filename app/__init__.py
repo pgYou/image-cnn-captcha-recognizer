@@ -1,5 +1,8 @@
 # coding:utf-8
 """应用模块：提供可调用的识别函数"""
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from core.model.inference import Recognizer
 
 _default_model_path = 'saved_model/model.weights.h5'
