@@ -1,0 +1,6 @@
+tensorflow[and-cuda]>=2.13
+opencv-python
+Pillow>=10.0.0
+numpy
+captcha
+matplotlib

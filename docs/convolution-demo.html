@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>卷积过程演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 30px;
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .panel {
+            text-align: center;
+        }
+
+        .panel h2 {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .grid {
+            display: inline-grid;
+            gap: 2px;
+        }
+
+        .input-grid {
+            grid-template-columns: repeat(11, 44px);
+        }
+
+        .kernel-grid {
+            grid-template-columns: repeat(3, 50px);
+        }
+
+        .output-grid {
+            grid-template-columns: repeat(9, 44px);
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .kernel-grid .cell {
+            width: 50px;
+            height: 50px;
+            font-size: 14px;
+        }
+
+        .input-cell {
+            background: #16213e;
+            color: #aaa;
+        }
+
+        .input-cell.pad {
+            background: #0d0d1a;
+            color: #444;
+            border: 1px dashed #333;
+        }
+
+        .input-cell.highlight {
+            background: #0f3460;
+            color: #fff;
+            box-shadow: 0 0 8px rgba(53, 120, 229, 0.5);
+            transform: scale(1.05);
+        }
+
+        .input-cell.highlight.pad {
+            background: #1a2a4a;
+            color: #668;
+            box-shadow: 0 0 6px rgba(53, 120, 229, 0.3);
+        }
+
+        .kernel-cell {
+            background: #533483;
+            color: #ddd;
+        }
+
+        .output-cell {
+            background: #16213e;
+            color: #aaa;
+        }
+
+        .output-cell.filled {
+            background: #0f3460;
+            color: #fff;
+        }
+
+        .output-cell.current {
+            background: #e94560;
+            color: #fff;
+            transform: scale(1.08);
+        }
+
+        .controls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #12122a;
+            padding: 14px 30px;
+            z-index: 100;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .controls h1 {
+            font-size: 16px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        button {
+            padding: 10px 28px;
+            margin: 0 6px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-play {
+            background: #e94560;
+            color: #fff;
+        }
+
+        .btn-play:hover {
+            background: #c73652;
+        }
+
+        .btn-reset {
+            background: #333;
+            color: #aaa;
+        }
+
+        .btn-reset:hover {
+            background: #444;
+            color: #fff;
+        }
+
+        .speed-label {
+            color: #666;
+            font-size: 13px;
+            margin-left: 12px;
+        }
+
+        .speed-label select {
+            background: #333;
+            color: #eee;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .calc-box {
+            margin-top: 16px;
+            padding: 10px 16px;
+            background: #16213e;
+            border-radius: 6px;
+            min-width: 150px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calc-line {
+            color: #aaa;
+        }
+
+        .calc-sum {
+            color: #e94560;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .calc-wait {
+            color: #555;
+        }
+
+        .arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: #333;
+            padding-top: 60px;
+        }
+
+        .note {
+            color: #555;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <h1>CNN 卷积过程演示</h1>
+        <div>
+            <button class="btn-play" id="btnPlay" onclick="start()">播放</button>
+            <button class="btn-play" id="btnStep" onclick="step()">单步</button>
+            <button class="btn-reset" onclick="reset()">重置</button>
+            <span class="speed-label">速度 <select id="speed">
+                    <option value="800">慢</option>
+                    <option value="400" selected>中</option>
+                    <option value="150">快</option>
+                </select></span>
+        </div>
+    </div>
+    <div class="container">
+        <div class="panel">
+            <h2>输入矩阵 (9×9) + padding</h2>
+            <div class="grid input-grid" id="inputGrid"></div>
+            <div class="note">虚线边框 = 补零 (zero padding)</div>
+        </div>
+        <div class="arrow">✕</div>
+        <div class="panel">
+            <h2>卷积核 (3×3)</h2>
+            <div class="grid kernel-grid" id="kernelGrid"></div>
+            <div class="calc-box" id="calcBox"><span class="calc-wait">点击播放开始演示</span></div>
+        </div>
+        <div class="arrow">=</div>
+        <div class="panel">
+            <h2>输出矩阵 (9×9)</h2>
+            <div class="grid output-grid" id="outputGrid"></div>
+        </div>
+    </div>
+    <script>
+        const ORIG = [
+            [1, 1, 1, 0, 0, 0, 1, 0, 1],
+            [0, 1, 0, 0, 1, 0, 1, 1, 1],
+            [0, 0, 1, 1, 1, 1, 0, 0, 0],
+            [1, 1, 0, 1, 0, 1, 0, 1, 0],
+            [0, 1, 1, 0, 1, 0, 1, 0, 1],
+            [1, 0, 1, 1, 0, 1, 0, 1, 1],
+            [0, 0, 0, 1, 1, 0, 1, 0, 0],
+            [1, 1, 1, 0, 0, 1, 0, 1, 1],
+            [0, 1, 0, 1, 1, 0, 1, 0, 1],
+        ];
+
+        // 11x11 padded input (original 9x9 + zero padding border)
+        const INPUT = Array.from({ length: 11 }, (_, r) =>
+            Array.from({ length: 11 }, (_, c) =>
+                (r >= 1 && r <= 9 && c >= 1 && c <= 9) ? ORIG[r - 1][c - 1] : 0
+            )
+        );
+
+        const KERNEL = [
+            [1, 0, -1],
+            [1, 0, -1],
+            [1, 0, -1],
+        ];
+
+        let row = 0, col = 0, timer = null, running = false;
+        const output = Array.from({ length: 9 }, () => Array(9).fill(null));
+
+        function isPad(r, c) { return r === 0 || r === 10 || c === 0 || c === 10; }
+
+        function render() {
+            const ig = document.getElementById('inputGrid');
+            ig.innerHTML = '';
+            for (let r = 0; r < 11; r++) {
+                for (let c = 0; c < 11; c++) {
+                    const d = document.createElement('div');
+                    d.className = 'cell input-cell';
+                    d.textContent = INPUT[r][c];
+                    if (isPad(r, c)) d.classList.add('pad');
+                    if (r >= row && r < row + 3 && c >= col && c < col + 3) {
+                        d.classList.add('highlight');
+                    }
+                    ig.appendChild(d);
+                }
+            }
+
+            const kg = document.getElementById('kernelGrid');
+            kg.innerHTML = '';
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    const d = document.createElement('div');
+                    d.className = 'cell kernel-cell';
+                    d.textContent = KERNEL[r][c];
+                    kg.appendChild(d);
+                }
+            }
+
+            const og = document.getElementById('outputGrid');
+            og.innerHTML = '';
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const d = document.createElement('div');
+                    d.className = 'cell output-cell';
+                    if (output[r][c] !== null) {
+                        d.textContent = output[r][c];
+                        d.classList.add('filled');
+                    }
+                    if (r === row && c === col && row < 9) {
+                        d.classList.add('current');
+                    }
+                    og.appendChild(d);
+                }
+            }
+        }
+
+        function showCalc() {
+            const box = document.getElementById('calcBox');
+            if (row >= 9) { box.innerHTML = '<span class="calc-wait">卷积完成</span>'; return; }
+            let terms = [];
+            let sum = 0;
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    const iv = INPUT[row + r][col + c];
+                    const kv = KERNEL[r][c];
+                    sum += iv * kv;
+                    terms.push(`${iv}<span style="color:#888">×</span>${kv}`);
+                }
+            }
+            let html = '';
+            for (let i = 0; i < 9; i += 3) {
+                html += `<div class="calc-line">${terms[i]} &nbsp; ${terms[i + 1]} &nbsp; ${terms[i + 2]}</div>`;
+            }
+            html += `<div class="calc-sum">= ${sum}</div>`;
+            html += `<div style="color:#666;font-size:11px;margin-top:4px">输出位置 [${row}, ${col}]</div>`;
+            box.innerHTML = html;
+        }
+
+        function doStep() {
+            if (row >= 9) { stop(); return false; }
+            let sum = 0;
+            for (let r = 0; r < 3; r++)
+                for (let c = 0; c < 3; c++)
+                    sum += INPUT[row + r][col + c] * KERNEL[r][c];
+            output[row][col] = sum;
+            showCalc();
+            render();
+            col++;
+            if (col >= 9) { col = 0; row++; }
+            return row < 9;
+        }
+
+        function start() {
+            if (running) { stop(); return; }
+            if (row >= 9) reset();
+            running = true;
+            document.getElementById('btnPlay').textContent = '暂停';
+            const speed = parseInt(document.getElementById('speed').value);
+            function tick() {
+                if (!running) return;
+                if (!doStep()) { stop(); return; }
+                timer = setTimeout(tick, speed);
+            }
+            tick();
+        }
+
+        function stop() {
+            running = false;
+            clearTimeout(timer);
+            document.getElementById('btnPlay').textContent = '播放';
+        }
+
+        function step() {
+            stop();
+            if (row >= 9) reset();
+            doStep();
+        }
+
+        function reset() {
+            stop();
+            row = 0; col = 0;
+            for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) output[r][c] = null;
+            document.getElementById('calcBox').innerHTML = '<span class="calc-wait">点击播放开始演示</span>';
+            render();
+        }
+
+        render();
+    </script>
+</body>
+
+</html>
